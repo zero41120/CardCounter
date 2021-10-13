@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cowcow</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <label>幾套牌</label>
+    <input id="deckCount" type="number" min="1" value="5" />
+    <button id="generateButton">生成</button>
+    <div class="result">
+        <div class="item">
+            <div>數字</div>
+            <div>剩餘</div>
+            <div>機率</div>
+        </div>
+        <div id="cardMap"></div>
+    </div>
+</body>
+
+<script type="module">
+    document.getElementById('generateButton').onclick = generate;
+    const countElem = document.getElementById('deckCount');
+    const mapElem = document.getElementById('cardMap');
+    let data = {}
+
+    function reset() {
+        data = {}
+        mapElem.innerHTML = null;
+        window.data = data;
+    }
+
+    function elem(tag, { klass, innerText } = {}) {
+        const elem = document.createElement(tag);
+        if (innerText) elem.innerText = innerText;
+        if (klass) elem.classList.add(klass);
+        return elem;
+    }
+
+    function generate() {
+        reset();
+        const deckCount = countElem.value;
+        const cardElems = [];
+        for (let i = 0; i < 12; i++) {
+            const face = i + 1;
+            const parent = elem('div', { klass: 'item' });
+            const faceE = elem('div', { klass: 'face', innerText: face });
+            const deckE = elem('div', { klass: 'deck', innerText: deckCount });
+            const chanceE = elem('div', { klass: 'chance', innerText: '0' });
+            const plusE = elem('button', { klass: 'deckBtn', innerText: '+' });
+            const minusE = elem('button', { klass: 'deckBtn', innerText: '-' });
+            setupButton(face, deckE, plusE, minusE, deckCount);
+            [faceE, deckE, chanceE, plusE, minusE]
+                .forEach(elem => parent.appendChild(elem))
+            cardElems.push(parent)
+
+            data[face] = { value: Number(deckCount), chanceE };
+        }
+        cardElems.forEach(elem => mapElem.appendChild(elem));
+        updateChance();
+    }
+
+    function setupButton(face, deckE, plusE, minusE, max) {
+        const getValue = () => Number(deckE.innerText);
+        plusE.onclick = () => {
+            const value = Math.min(getValue() + 1, max);
+            deckE.innerText = value;
+            updateChance({ face, value });
+        }
+        minusE.onclick = () => {
+            const value = Math.max(getValue() - 1, 0);
+            deckE.innerText = value;
+            updateChance({ face, value });
+        }
+    }
+
+    function updateChance({ face, value } = {}) {
+        if (face != null && value != null) {
+            data[face].value = value;
+        }
+        let sum = Object.values(data).reduce((acc, c) => acc + c.value, 0);
+        Object.values(data).forEach(({ value, chanceE }) => {
+            chanceE.innerText = (value * 100 / sum).toFixed(2) + '%'
+        })
+    }
+    generate();
+</script>
+
+</html>
