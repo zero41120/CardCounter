@@ -10,12 +10,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500&display=swap" rel="stylesheet">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
-    <label>幾套牌</label>
-    <input id="deckCount" type="number" min="1" value="5" />
-    <button id="generateButton">生成</button>
+    <div class="section1">
+        <div class="top">
+            <label>幾組1-13</label>
+            <input id="deckCount" type="number" min="1" value="4" />
+            <button id="generateButton">洗牌</button>
+        </div>
+        <div class="cardPickers">
+            <button class="picker">1</button>
+            <button class="picker">2</button>
+            <button class="picker">3</button>
+            <button class="picker">4</button>
+            <button class="picker">5</button>
+            <button class="picker">6</button>
+            <button class="picker">7</button>
+            <button class="picker">8</button>
+            <button class="picker">9</button>
+            <button class="picker">10</button>
+            <button class="picker">J</button>
+            <button class="picker">Q</button>
+            <button id="reset" class="picker">重選</button>
+            <button class="picker">K</button>
+            <button id="send" class="picker">送出</button>
+        </div>
+    </div>
     <div class="result">
         <div class="item">
             <div>數字</div>
@@ -27,15 +49,23 @@
 </body>
 
 <script type="module">
-    document.getElementById('generateButton').onclick = generate;
+    import { setupPickers } from './picker.js';
+
+    let data = {};
+    document.getElementById('generateButton').onclick = reset;
     const countElem = document.getElementById('deckCount');
     const mapElem = document.getElementById('cardMap');
-    let data = {}
+    reset();
 
     function reset() {
+        const deckCount = Number(countElem.value);
         data = {}
+        for (let i = 0; i < 13; i++) data[i + 1] = { value: deckCount };
+        data.remainingCards = 13 * deckCount;
         mapElem.innerHTML = null;
         window.data = data;
+        setupPickers(data, syncData);
+        syncData();
     }
 
     function elem(tag, { klass, innerText } = {}) {
@@ -45,53 +75,26 @@
         return elem;
     }
 
-    function generate() {
-        reset();
-        const deckCount = countElem.value;
-        const cardElems = [];
-        for (let i = 0; i < 12; i++) {
+    function syncData() {
+        mapElem.innerHTML = null;
+        const deckCount = Number(countElem.value);
+        let remainElemMap = [];
+        for (let i = 0; i < 13; i++) {
             const face = i + 1;
             const parent = elem('div', { klass: 'item' });
             const faceE = elem('div', { klass: 'face', innerText: face });
-            const deckE = elem('div', { klass: 'deck', innerText: deckCount });
-            const chanceE = elem('div', { klass: 'chance', innerText: '0' });
-            const plusE = elem('button', { klass: 'deckBtn', innerText: '+' });
-            const minusE = elem('button', { klass: 'deckBtn', innerText: '-' });
-            setupButton(face, deckE, plusE, minusE, deckCount);
-            [faceE, deckE, chanceE, plusE, minusE]
-                .forEach(elem => parent.appendChild(elem))
-            cardElems.push(parent)
-
-            data[face] = { value: Number(deckCount), chanceE };
+            const remain = data[face]?.value ?? deckCount;
+            const remainE = elem('div', { klass: 'remain', innerText: 'x' + remain });
+            const chance = (remain * 100 / data.remainingCards).toFixed(2) + '%';
+            const chanceE = elem('div', { klass: 'chance', innerText: chance });
+            [faceE, remainE, chanceE].forEach(elem => parent.appendChild(elem));
+            data[face].chanceE = chanceE;
+            remainElemMap.push({ elem: parent, remain });
         }
-        cardElems.forEach(elem => mapElem.appendChild(elem));
-        updateChance();
+        remainElemMap.sort((a, b) => b.remain - a.remain);
+        remainElemMap.forEach(({ elem }) => mapElem.appendChild(elem));
     }
 
-    function setupButton(face, deckE, plusE, minusE, max) {
-        const getValue = () => Number(deckE.innerText);
-        plusE.onclick = () => {
-            const value = Math.min(getValue() + 1, max);
-            deckE.innerText = value;
-            updateChance({ face, value });
-        }
-        minusE.onclick = () => {
-            const value = Math.max(getValue() - 1, 0);
-            deckE.innerText = value;
-            updateChance({ face, value });
-        }
-    }
-
-    function updateChance({ face, value } = {}) {
-        if (face != null && value != null) {
-            data[face].value = value;
-        }
-        let sum = Object.values(data).reduce((acc, c) => acc + c.value, 0);
-        Object.values(data).forEach(({ value, chanceE }) => {
-            chanceE.innerText = (value * 100 / sum).toFixed(2) + '%'
-        })
-    }
-    generate();
 </script>
 
 </html>
