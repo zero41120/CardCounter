@@ -49,7 +49,7 @@
 </body>
 
 <script type="module">
-    import { setupPickers } from './picker.js';
+    import { setupPickers, numberToFace } from './picker.js';
 
     let data = {};
     document.getElementById('generateButton').onclick = reset;
@@ -80,15 +80,15 @@
         const deckCount = Number(countElem.value);
         let remainElemMap = [];
         for (let i = 0; i < 13; i++) {
-            const face = i + 1;
+            const cardNumber = i + 1;
             const parent = elem('div', { klass: 'item' });
-            const faceE = elem('div', { klass: 'face', innerText: face });
-            const remain = data[face]?.value ?? deckCount;
+            const faceE = elem('div', { klass: 'face', innerText: numberToFace(cardNumber) });
+            const remain = data[cardNumber]?.value ?? deckCount;
             const remainE = elem('div', { klass: 'remain', innerText: 'x' + remain });
             const chance = (remain * 100 / data.remainingCards).toFixed(2) + '%';
             const chanceE = elem('div', { klass: 'chance', innerText: chance });
             [faceE, remainE, chanceE].forEach(elem => parent.appendChild(elem));
-            data[face].chanceE = chanceE;
+            data[cardNumber].chanceE = chanceE;
             remainElemMap.push({ elem: parent, remain });
         }
         remainElemMap.sort((a, b) => b.remain - a.remain);

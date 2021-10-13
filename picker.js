@@ -8,11 +8,16 @@ function elemsToFaces(elems) {
         });
 }
 
-function faceToElem(face) {
-    const special = { 11: 'J', 12: 'Q', 13: 'K' };
-    const converted = (special[face] ?? face) + '';
+function numberToElem(num) {
+    const converted = numberToFace(num);
     const pickers = document.getElementsByClassName('picker');
     return Array.from(pickers).filter(picker => picker.innerText == converted)[0];
+}
+
+export function numberToFace(num) {
+    const special = { 11: 'J', 12: 'Q', 13: 'K' };
+    const converted = (special[num] ?? num) + '';
+    return converted;
 }
 
 export function setupPickers(data, syncDataFunc) {
@@ -47,7 +52,7 @@ export function blockPicker(data) {
         if (key == 'remainingCards') return;
         const value = data[key].value
         if (value > 0) return;
-        const elem = faceToElem(key);
+        const elem = numberToElem(key);
         elem.classList.add('blocked');
         elem.onclick = null;
     })
